@@ -84,7 +84,7 @@ export default function App() {
       icon: community.icon,
       domain: community.domain,
       results: grouped[community.domain] || []
-    })).filter(group => group.results.length > 0); // 결과가 있는 것만
+    }));
 
     setCommunityGroups(groups);
   };
@@ -93,7 +93,14 @@ export default function App() {
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
-  const hasResults = communityGroups.length > 0;
+  const handleSiteSearch = (domain: string) => {
+    const url = `https://www.google.com/search?q=site:${domain}+${encodeURIComponent(searchQuery)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  const groupsWithResults = communityGroups.filter((g: CommunityGroup) => g.results.length > 0);
+  const groupsWithoutResults = communityGroups.filter((g: CommunityGroup) => g.results.length === 0);
+  const hasResults = groupsWithResults.length > 0;
 
   return (
     <>
@@ -255,9 +262,9 @@ export default function App() {
             {/* 구분선 */}
             <div className="h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent mx-4 my-2" />
 
-            {/* 커뮤니티 리스트 */}
+            {/* 커뮤니티 리스트 (결과 있는 것) */}
             <div className="px-3 py-2 space-y-3 max-h-[600px] overflow-y-auto">
-              {communityGroups.map((group) => (
+              {groupsWithResults.map((group: CommunityGroup, groupIdx: number) => (
                 <div key={group.name} className="space-y-2">
                   {/* 커뮤니티 헤더 */}
                   <div className="flex items-center gap-2 px-2">
@@ -286,11 +293,33 @@ export default function App() {
                   </div>
 
                   {/* 구분선 (마지막 아이템 제외) */}
-                  {group.name !== 'Reddit' && (
+                  {groupIdx < groupsWithResults.length - 1 && (
                     <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent my-2" />
                   )}
                 </div>
               ))}
+
+              {/* 결과 없는 커뮤니티 → 사이트 내 검색 바로가기 */}
+              {groupsWithoutResults.length > 0 && (
+                <>
+                  <div className="h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent my-2" />
+                  <div className="px-2">
+                    <p className="text-xs text-gray-500 font-semibold mb-2">🔎 사이트 내 검색</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {groupsWithoutResults.map((group: CommunityGroup) => (
+                        <button
+                          key={group.domain}
+                          onClick={() => handleSiteSearch(group.domain)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 border border-gray-200 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-all"
+                        >
+                          <span>{group.icon}</span>
+                          <span>{group.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
 
             {/* 구분선 */}
