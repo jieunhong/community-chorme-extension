@@ -87,7 +87,7 @@
 
     const MINI_BTN_ID = 'community-filter-mini-btn';
 
-    function createSidebar(results) {
+    function createSidebar(results, defaultOpen) {
         // 중복 생성 방지
         const existing = document.getElementById(SIDEBAR_ID);
         if (existing) existing.remove();
@@ -104,12 +104,19 @@
         miniBtn.className = 'cf-mini-btn';
         miniBtn.innerHTML = '💬';
         miniBtn.title = '커뮤니티 반응 열기';
-        miniBtn.style.display = 'none';
         miniBtn.addEventListener('click', () => {
             sidebar.style.display = '';
-            sidebar.classList.remove('cf-collapsed');
             miniBtn.style.display = 'none';
         });
+
+        // 기본 상태 적용
+        if (defaultOpen) {
+            sidebar.style.display = '';
+            miniBtn.style.display = 'none';
+        } else {
+            sidebar.style.display = 'none';
+            miniBtn.style.display = '';
+        }
 
         // ── Header ──
         const header = document.createElement('div');
@@ -145,12 +152,15 @@
 
         sidebar.appendChild(header);
 
-        // ── Body — 검색 결과 리스트 ──
+        // ── Body (스크롤 가능한 영역) ──
+        const body = document.createElement('div');
+        body.className = 'cf-body';
+
         if (results.length === 0) {
             const empty = document.createElement('div');
             empty.className = 'cf-empty';
             empty.textContent = '커뮤니티 결과 없음';
-            sidebar.appendChild(empty);
+            body.appendChild(empty);
         } else {
             const ul = document.createElement('ul');
             ul.className = 'cf-list';
@@ -180,25 +190,25 @@
                 ul.appendChild(li);
             }
 
-            sidebar.appendChild(ul);
+            body.appendChild(ul);
         }
 
-        // ── 검색 결과 없는 커뮤니티 → site: 검색 바로가기 ──
-        const missing = getMissingCommunities(results);
+        sidebar.appendChild(body);
 
-        if (missing.length > 0 && searchQuery) {
-            const section = document.createElement('div');
-            section.className = 'cf-search-section';
+        // ── Footer — 사이트 내 검색 (항상 표시, 하단 고정) ──
+        if (searchQuery) {
+            const footer = document.createElement('div');
+            footer.className = 'cf-footer';
 
             const sectionTitle = document.createElement('div');
             sectionTitle.className = 'cf-search-section-title';
             sectionTitle.textContent = '🔎 사이트 내 검색';
-            section.appendChild(sectionTitle);
+            footer.appendChild(sectionTitle);
 
             const grid = document.createElement('div');
             grid.className = 'cf-search-grid';
 
-            for (const community of missing) {
+            for (const community of COMMUNITY_DOMAINS) {
                 const link = document.createElement('a');
                 link.className = 'cf-search-link';
                 link.href = `https://www.google.com/search?q=site:${community.domain}+${encodeURIComponent(searchQuery)}`;
@@ -219,8 +229,47 @@
                 grid.appendChild(link);
             }
 
-            section.appendChild(grid);
-            sidebar.appendChild(section);
+            footer.appendChild(grid);
+
+            // 자동 열기 토글 (footer 하단)
+            const toggleRow = document.createElement('div');
+            toggleRow.className = 'cf-toggle-row';
+
+            const toggleText = document.createElement('span');
+            toggleText.className = 'cf-toggle-text';
+            toggleText.textContent = '검색 시 자동 열기';
+            toggleRow.appendChild(toggleText);
+
+            const toggleLabel = document.createElement('label');
+            toggleLabel.className = 'cf-toggle';
+
+            const toggleInput = document.createElement('input');
+            toggleInput.type = 'checkbox';
+            toggleInput.checked = defaultOpen;
+
+            const toggleSlider = document.createElement('span');
+            toggleSlider.className = 'cf-toggle-slider';
+
+            toggleLabel.appendChild(toggleInput);
+            toggleLabel.appendChild(toggleSlider);
+            toggleRow.appendChild(toggleLabel);
+
+            // 호버 시 나타날 설명 텍스트
+            const toggleDesc = document.createElement('div');
+            toggleDesc.className = 'cf-toggle-desc';
+            const updateDesc = (checked) => {
+                toggleDesc.textContent = checked ? '기본 활성화' : '기본 비활성화';
+            };
+            updateDesc(toggleInput.checked);
+
+            toggleInput.addEventListener('change', () => {
+                chrome.storage.local.set({ sidebarDefaultOpen: toggleInput.checked });
+                updateDesc(toggleInput.checked);
+            });
+
+            footer.appendChild(toggleRow);
+            footer.appendChild(toggleDesc);
+            sidebar.appendChild(footer);
         }
 
         document.body.appendChild(miniBtn);
@@ -232,8 +281,14 @@
     ────────────────────────────────────────────── */
 
     function init() {
-        const results = extractCommunityResults();
-        createSidebar(results);
+        chrome.storage.local.get(['sidebarDefaultOpen'], (data) => {
+            // 기본값: true (처음 사용 시 사이드바 열린 상태)
+            const defaultOpen = data.sidebarDefaultOpen !== undefined
+                ? data.sidebarDefaultOpen
+                : true;
+            const results = extractCommunityResults();
+            createSidebar(results, defaultOpen);
+        });
     }
 
     if (document.readyState === 'loading') {

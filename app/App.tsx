@@ -298,41 +298,23 @@ export default function App() {
                   )}
                 </div>
               ))}
-
-              {/* 결과 없는 커뮤니티 → 사이트 내 검색 바로가기 */}
-              {groupsWithoutResults.length > 0 && (
-                <>
-                  <div className="h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent my-2" />
-                  <div className="px-2">
-                    <p className="text-xs text-gray-500 font-semibold mb-2">🔎 사이트 내 검색</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {groupsWithoutResults.map((group: CommunityGroup) => (
-                        <button
-                          key={group.domain}
-                          onClick={() => handleSiteSearch(group.domain)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 border border-gray-200 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-all"
-                        >
-                          <span>{group.icon}</span>
-                          <span>{group.name}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </>
-              )}
             </div>
 
-            {/* 구분선 */}
-            <div className="h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent mx-4 my-2" />
-
-            {/* 푸터 */}
-            <div className="px-4 py-3 bg-gray-50">
-              <button
-                onClick={() => setIsCollapsed(true)}
-                className="w-full text-xs text-gray-600 hover:text-gray-900 font-medium transition-colors"
-              >
-                접기
-              </button>
+            {/* 사이트 내 검색 — 하단 고정, 모든 커뮤니티 항상 표시 */}
+            <div className="px-3 py-3 bg-gray-50 border-t border-gray-200">
+              <p className="text-xs text-gray-500 font-semibold mb-2">🔎 사이트 내 검색</p>
+              <div className="flex flex-wrap gap-1.5">
+                {COMMUNITIES.map((community) => (
+                  <button
+                    key={community.domain}
+                    onClick={() => handleSiteSearch(community.domain)}
+                    className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-all"
+                  >
+                    <span>{community.icon}</span>
+                    <span>{community.name}</span>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         )}

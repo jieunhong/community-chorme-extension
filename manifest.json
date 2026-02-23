@@ -3,6 +3,9 @@
     "name": "커뮤니티 반응 필터",
     "version": "1.0.0",
     "description": "구글 검색 결과에서 커뮤니티 게시글 링크만 필터링하여 사이드바로 보여줍니다.",
+    "permissions": [
+        "storage"
+    ],
     "content_scripts": [
         {
             "matches": [
