@@ -85,30 +85,63 @@
        Sidebar 생성
     ────────────────────────────────────────────── */
 
+    const MINI_BTN_ID = 'community-filter-mini-btn';
+
     function createSidebar(results) {
         // 중복 생성 방지
         const existing = document.getElementById(SIDEBAR_ID);
         if (existing) existing.remove();
+        const existingBtn = document.getElementById(MINI_BTN_ID);
+        if (existingBtn) existingBtn.remove();
 
         const searchQuery = getSearchQuery();
         const sidebar = document.createElement('div');
         sidebar.id = SIDEBAR_ID;
 
+        // ── 최소화 버튼 (별도 요소 — 사이드바가 숨겨질 때 표시) ──
+        const miniBtn = document.createElement('button');
+        miniBtn.id = MINI_BTN_ID;
+        miniBtn.className = 'cf-mini-btn';
+        miniBtn.innerHTML = '💬';
+        miniBtn.title = '커뮤니티 반응 열기';
+        miniBtn.style.display = 'none';
+        miniBtn.addEventListener('click', () => {
+            sidebar.style.display = '';
+            sidebar.classList.remove('cf-collapsed');
+            miniBtn.style.display = 'none';
+        });
+
         // ── Header ──
         const header = document.createElement('div');
         header.className = 'cf-header';
 
+        const headerLeft = document.createElement('div');
+        headerLeft.className = 'cf-header-left';
+
         const titleEl = document.createElement('h2');
         titleEl.className = 'cf-header-title';
         titleEl.textContent = '커뮤니티 반응';
-        header.appendChild(titleEl);
+        headerLeft.appendChild(titleEl);
 
         if (results.length > 0) {
             const badge = document.createElement('span');
             badge.className = 'cf-badge';
             badge.textContent = results.length;
-            header.appendChild(badge);
+            headerLeft.appendChild(badge);
         }
+
+        header.appendChild(headerLeft);
+
+        // 최소화 버튼
+        const collapseBtn = document.createElement('button');
+        collapseBtn.className = 'cf-collapse-btn';
+        collapseBtn.innerHTML = '✕';
+        collapseBtn.title = '최소화';
+        collapseBtn.addEventListener('click', () => {
+            sidebar.style.display = 'none';
+            miniBtn.style.display = '';
+        });
+        header.appendChild(collapseBtn);
 
         sidebar.appendChild(header);
 
@@ -190,6 +223,7 @@
             sidebar.appendChild(section);
         }
 
+        document.body.appendChild(miniBtn);
         document.body.appendChild(sidebar);
     }
 

@@ -26,7 +26,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 18px;
+  padding: 14px 14px 14px 18px;
   border-bottom: 1px solid #f0f0f0;
   position: sticky;
   top: 0;
@@ -35,14 +35,54 @@
   z-index: 1;
 }
 
-#community-filter-sidebar .cf-header-title {
-  margin: 0;
-  font-size: 15px;
-  font-weight: 700;
-  color: #1a1a1a;
+#community-filter-sidebar .cf-header-left {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+}
+
+#community-filter-sidebar .cf-collapse-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: #9ca3af;
+  font-size: 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+#community-filter-sidebar .cf-collapse-btn:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+/* ---------- mini floating button (collapsed state) ---------- */
+#community-filter-mini-btn {
+  position: fixed;
+  right: 20px;
+  top: 120px;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.06);
+  font-size: 20px;
+  cursor: pointer;
+  z-index: 2147483647;
+  display: grid;
+  place-items: center;
+  transition: all 0.2s ease;
+}
+
+#community-filter-mini-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.16), 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
 #community-filter-sidebar .cf-header-title::before {
