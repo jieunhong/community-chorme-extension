@@ -1,0 +1,29 @@
+{
+    "manifest_version": 3,
+    "name": "커뮤니티 반응 필터",
+    "version": "1.0.0",
+    "description": "구글 검색 결과에서 커뮤니티 게시글 링크만 필터링하여 사이드바로 보여줍니다.",
+    "permissions": [
+        "storage"
+    ],
+    "icons": {
+        "16": "icon256.png",
+        "32": "icon256.png",
+        "48": "icon256.png",
+        "128": "icon256.png"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "https://www.google.com/search*"
+            ],
+            "js": [
+                "content.js"
+            ],
+            "css": [
+                "style.css"
+            ],
+            "run_at": "document_idle"
+        }
+    ]
+}
