@@ -89,46 +89,43 @@
 
     function makeElementDraggable(element, handle, onDragEnd) {
         let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+        let hasMoved = false;
 
         handle.style.cursor = 'move';
         handle.onmousedown = dragMouseDown;
 
         function dragMouseDown(e) {
             e = e || window.event;
-            // Only left click
             if (e.button !== 0) return;
-
-            // Prevent dragging if clicking on buttons (except if handle is the button itself)
             if (e.target.tagName === 'BUTTON' && e.target !== handle) return;
             if (e.target.closest('button') && e.target.closest('button') !== handle) return;
 
-            // e.preventDefault(); // Don't prevent default to allow button clicks if needed, 
-            // but for dragging we usually want it.
-            // Actually, if it's a button, it might interfere with click.
-
+            hasMoved = false;
             pos3 = e.clientX;
             pos4 = e.clientY;
             document.onmouseup = closeDragElement;
             document.onmousemove = elementDrag;
-
             element.parentElement.style.userSelect = 'none';
         }
 
         function elementDrag(e) {
             e = e || window.event;
+            const dx = pos3 - e.clientX;
+            const dy = pos4 - e.clientY;
+            if (Math.abs(dx) > 2 || Math.abs(dy) > 2) hasMoved = true;
+            if (!hasMoved) return;
+
             e.preventDefault();
-            pos1 = pos3 - e.clientX;
-            pos2 = pos4 - e.clientY;
+            pos1 = dx;
+            pos2 = dy;
             pos3 = e.clientX;
             pos4 = e.clientY;
 
             const newTop = element.offsetTop - pos2;
             const newLeft = element.offsetLeft - pos1;
-
             const padding = 10;
             const maxTop = window.innerHeight - element.offsetHeight - padding;
             const maxLeft = window.innerWidth - element.offsetWidth - padding;
-
             const clampedTop = Math.max(padding, Math.min(newTop, maxTop));
             const clampedLeft = Math.max(padding, Math.min(newLeft, maxLeft));
 
@@ -140,10 +137,8 @@
         function closeDragElement() {
             document.onmouseup = null;
             document.onmousemove = null;
-            if (element.parentElement) {
-                element.parentElement.style.userSelect = '';
-            }
-            if (onDragEnd) onDragEnd(element.style.top, element.style.left);
+            if (element.parentElement) element.parentElement.style.userSelect = '';
+            if (onDragEnd) onDragEnd(element.style.top, element.style.left, hasMoved);
         }
     }
 
@@ -193,7 +188,12 @@
             miniBtn.style.right = 'auto';
         }
 
+        let miniBtnMoved = false;
         miniBtn.addEventListener('click', () => {
+            if (miniBtnMoved) {
+                miniBtnMoved = false;
+                return;
+            }
             sidebar.style.display = '';
             miniBtn.style.display = 'none';
         });
@@ -253,16 +253,19 @@
         });
 
         // miniBtn 드래그 기능
-        makeElementDraggable(miniBtn, miniBtn, (top, left) => {
-            sidebar.style.top = top;
-            sidebar.style.left = `calc(${left} - 300px + 44px)`;
-            sidebar.style.right = 'auto';
-            chrome.storage.local.set({
-                sidebarPos: {
-                    top: sidebar.style.top,
-                    left: sidebar.style.left
-                }
-            });
+        makeElementDraggable(miniBtn, miniBtn, (top, left, hasMoved) => {
+            miniBtnMoved = hasMoved;
+            if (hasMoved) {
+                sidebar.style.top = top;
+                sidebar.style.left = `calc(${left} - 300px + 44px)`;
+                sidebar.style.right = 'auto';
+                chrome.storage.local.set({
+                    sidebarPos: {
+                        top: sidebar.style.top,
+                        left: sidebar.style.left
+                    }
+                });
+            }
         });
 
 
