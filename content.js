@@ -4,7 +4,7 @@
     /* ──────────────────────────────────────────────
        Config
     ────────────────────────────────────────────── */
-    const COMMUNITY_DOMAINS = [
+    const DEFAULT_COMMUNITY_DOMAINS = [
         { domain: 'github.com', name: 'GitHub', icon: '🐈‍⬛' },
         { domain: 'stackoverflow.com', name: 'StackOverFlow', icon: '📚' },
         { domain: 'okky.kr', name: 'OKKY', icon: '💙' },
@@ -14,6 +14,9 @@
         { domain: 'ppomppu.co.kr', name: '뽐뿌', icon: '💰' },
         { domain: 'reddit.com', name: 'Reddit', icon: '🤖' },
     ];
+
+    /** 기본 + 커스텀 도메인을 합친 전체 목록 (런타임에 갱신) */
+    let allCommunityDomains = [...DEFAULT_COMMUNITY_DOMAINS];
 
     const MAX_RESULTS = 8;
     const SIDEBAR_ID = 'community-filter-sidebar';
@@ -35,7 +38,7 @@
     function matchCommunityDomain(href) {
         try {
             const hostname = new URL(href).hostname;
-            return COMMUNITY_DOMAINS.find(
+            return allCommunityDomains.find(
                 (c) => hostname === c.domain || hostname.endsWith('.' + c.domain)
             ) || null;
         } catch {
@@ -80,7 +83,7 @@
      */
     function getMissingCommunities(results) {
         const foundDomains = new Set(results.map((r) => r.domain));
-        return COMMUNITY_DOMAINS.filter((c) => !foundDomains.has(c.domain));
+        return allCommunityDomains.filter((c) => !foundDomains.has(c.domain));
     }
 
     /* ──────────────────────────────────────────────
@@ -282,7 +285,7 @@
             ul.className = 'cf-list';
 
             for (const item of results) {
-                const community = COMMUNITY_DOMAINS.find((c) => c.domain === item.domain);
+                const community = allCommunityDomains.find((c) => c.domain === item.domain);
                 const li = document.createElement('li');
                 li.className = 'cf-list-item';
 
@@ -326,7 +329,7 @@
 
             const cleanQuery = getCleanSearchQuery(searchQuery);
 
-            for (const community of COMMUNITY_DOMAINS) {
+            for (const community of allCommunityDomains) {
                 const link = document.createElement('a');
                 link.className = 'cf-search-link';
                 link.href = `https://www.google.com/search?q=site:${community.domain}+${encodeURIComponent(cleanQuery)}`;
@@ -378,6 +381,235 @@
 
             footer.appendChild(toggleRow);
             sidebar.appendChild(footer);
+
+            // ── 커스텀 도메인 관리 섹션 ──
+            const customSection = document.createElement('div');
+            customSection.className = 'cf-custom-section';
+
+            const customTitle = document.createElement('div');
+            customTitle.className = 'cf-search-section-title cf-custom-toggle-title';
+
+            const customTitleText = document.createElement('span');
+            customTitleText.textContent = '⚙️ 사이트 관리';
+
+            const customArrow = document.createElement('span');
+            customArrow.className = 'cf-custom-arrow';
+            customArrow.textContent = '▶';
+
+            customTitle.appendChild(customTitleText);
+            customTitle.appendChild(customArrow);
+            customSection.appendChild(customTitle);
+
+            // 접고 펼 수 있는 콘텐츠 영역
+            const customBody = document.createElement('div');
+            customBody.className = 'cf-custom-body';
+
+            // 기본 접힌 상태로 시작, 저장된 상태 불러오기
+            chrome.storage.local.get(['customSectionOpen'], (d) => {
+                const isOpen = d.customSectionOpen || false;
+                customBody.style.display = isOpen ? '' : 'none';
+                customArrow.textContent = isOpen ? '▼' : '▶';
+                if (isOpen) customSection.classList.add('cf-custom-section-open');
+            });
+
+            customTitle.addEventListener('click', () => {
+                const isHidden = customBody.style.display === 'none';
+                customBody.style.display = isHidden ? '' : 'none';
+                customArrow.textContent = isHidden ? '▼' : '▶';
+                customSection.classList.toggle('cf-custom-section-open', isHidden);
+                chrome.storage.local.set({ customSectionOpen: isHidden });
+            });
+
+            // 현재 등록된 커스텀 도메인 목록
+            const customListContainer = document.createElement('div');
+            customListContainer.className = 'cf-custom-list';
+
+            function renderCustomList() {
+                customListContainer.innerHTML = '';
+                chrome.storage.local.get(['customDomains'], (data) => {
+                    const customs = data.customDomains || [];
+                    if (customs.length === 0) {
+                        const emptyMsg = document.createElement('div');
+                        emptyMsg.className = 'cf-custom-empty';
+                        emptyMsg.textContent = '추가된 커스텀 사이트가 없습니다';
+                        customListContainer.appendChild(emptyMsg);
+                        return;
+                    }
+                    for (const item of customs) {
+                        const row = document.createElement('div');
+                        row.className = 'cf-custom-item';
+
+                        const info = document.createElement('span');
+                        info.className = 'cf-custom-item-info';
+                        info.textContent = `${item.icon} ${item.name}`;
+
+                        const domainText = document.createElement('span');
+                        domainText.className = 'cf-custom-item-domain';
+                        domainText.textContent = item.domain;
+
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.className = 'cf-custom-delete-btn';
+                        deleteBtn.textContent = '✕';
+                        deleteBtn.title = '삭제';
+                        deleteBtn.addEventListener('click', () => {
+                            chrome.storage.local.get(['customDomains'], (d) => {
+                                const updated = (d.customDomains || []).filter(c => c.domain !== item.domain);
+                                chrome.storage.local.set({ customDomains: updated }, () => {
+                                    allCommunityDomains = [...DEFAULT_COMMUNITY_DOMAINS, ...updated];
+                                    renderCustomList();
+                                    init();
+                                });
+                            });
+                        });
+
+                        row.appendChild(info);
+                        row.appendChild(domainText);
+                        row.appendChild(deleteBtn);
+                        customListContainer.appendChild(row);
+                    }
+                });
+            }
+            renderCustomList();
+            customBody.appendChild(customListContainer);
+
+            // 추가 폼
+            const addForm = document.createElement('div');
+            addForm.className = 'cf-custom-form';
+
+            const inputIcon = document.createElement('input');
+            const randomIcons = ['🌐', '⭐', '💎', '🔥', '🎯', '🚀', '💡', '🎨', '🍀', '🦋', '🌈', '🎪', '🏆', '🎵', '🌸', '🐝', '🦊', '🐳', '🌙', '☕'];
+            inputIcon.className = 'cf-custom-input cf-custom-input-icon';
+            inputIcon.type = 'text';
+            inputIcon.placeholder = '아이콘';
+            inputIcon.value = randomIcons[Math.floor(Math.random() * randomIcons.length)];
+            inputIcon.maxLength = 4;
+
+            const inputName = document.createElement('input');
+            inputName.className = 'cf-custom-input cf-custom-input-name';
+            inputName.type = 'text';
+            inputName.placeholder = '이름';
+
+            const inputDomain = document.createElement('input');
+            inputDomain.className = 'cf-custom-input cf-custom-input-domain';
+            inputDomain.type = 'text';
+            inputDomain.placeholder = '도메인 (예: example.com)';
+
+            const addBtn = document.createElement('button');
+            addBtn.className = 'cf-custom-add-btn';
+            addBtn.textContent = '추가';
+            addBtn.addEventListener('click', () => {
+                const domain = inputDomain.value.trim();
+                const name = inputName.value.trim();
+                const icon = inputIcon.value.trim() || '🌐';
+
+                if (!domain || !name) {
+                    inputDomain.style.borderColor = !domain ? '#ef4444' : '';
+                    inputName.style.borderColor = !name ? '#ef4444' : '';
+                    return;
+                }
+
+                // 중복 확인
+                if (allCommunityDomains.some(c => c.domain === domain)) {
+                    inputDomain.style.borderColor = '#ef4444';
+                    inputDomain.value = '';
+                    inputDomain.placeholder = '이미 등록된 도메인';
+                    setTimeout(() => {
+                        inputDomain.style.borderColor = '';
+                        inputDomain.placeholder = '도메인 (예: example.com)';
+                    }, 2000);
+                    return;
+                }
+
+                chrome.storage.local.get(['customDomains'], (data) => {
+                    const customs = data.customDomains || [];
+                    customs.push({ domain, name, icon, isCustom: true });
+                    chrome.storage.local.set({ customDomains: customs }, () => {
+                        allCommunityDomains = [...DEFAULT_COMMUNITY_DOMAINS, ...customs];
+                        inputDomain.value = '';
+                        inputName.value = '';
+                        inputIcon.value = randomIcons[Math.floor(Math.random() * randomIcons.length)];
+                        inputDomain.style.borderColor = '';
+                        inputName.style.borderColor = '';
+                        renderCustomList();
+                        // 사이드바 다시 초기화
+                        init();
+                    });
+                });
+            });
+
+            // Enter 키로 추가
+            [inputIcon, inputName, inputDomain].forEach(input => {
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') addBtn.click();
+                });
+            });
+
+            addForm.appendChild(inputIcon);
+            addForm.appendChild(inputName);
+            addForm.appendChild(inputDomain);
+            addForm.appendChild(addBtn);
+            customBody.appendChild(addForm);
+
+            // 기본 사이트 활성/비활성 토글 목록
+            const defaultListTitle = document.createElement('div');
+            defaultListTitle.className = 'cf-custom-subtitle';
+            defaultListTitle.textContent = '기본 사이트';
+            customBody.appendChild(defaultListTitle);
+
+            const defaultListContainer = document.createElement('div');
+            defaultListContainer.className = 'cf-custom-list';
+
+            chrome.storage.local.get(['disabledDefaults'], (dd) => {
+                const disabled = dd.disabledDefaults || [];
+                for (const site of DEFAULT_COMMUNITY_DOMAINS) {
+                    const row = document.createElement('div');
+                    row.className = 'cf-custom-item';
+
+                    const info = document.createElement('span');
+                    info.className = 'cf-custom-item-info';
+                    info.textContent = `${site.icon} ${site.name}`;
+
+                    const domainText = document.createElement('span');
+                    domainText.className = 'cf-custom-item-domain';
+                    domainText.textContent = site.domain;
+
+                    const toggleLabel = document.createElement('label');
+                    toggleLabel.className = 'cf-toggle cf-custom-toggle';
+
+                    const toggleInput = document.createElement('input');
+                    toggleInput.type = 'checkbox';
+                    toggleInput.checked = !disabled.includes(site.domain);
+
+                    const toggleSlider = document.createElement('span');
+                    toggleSlider.className = 'cf-toggle-slider';
+
+                    toggleInput.addEventListener('change', () => {
+                        chrome.storage.local.get(['disabledDefaults'], (d2) => {
+                            let updated = d2.disabledDefaults || [];
+                            if (toggleInput.checked) {
+                                updated = updated.filter(d => d !== site.domain);
+                            } else {
+                                if (!updated.includes(site.domain)) updated.push(site.domain);
+                            }
+                            chrome.storage.local.set({ disabledDefaults: updated }, () => {
+                                init();
+                            });
+                        });
+                    });
+
+                    toggleLabel.appendChild(toggleInput);
+                    toggleLabel.appendChild(toggleSlider);
+
+                    row.appendChild(info);
+                    row.appendChild(domainText);
+                    row.appendChild(toggleLabel);
+                    defaultListContainer.appendChild(row);
+                }
+            });
+            customBody.appendChild(defaultListContainer);
+
+            customSection.appendChild(customBody);
+            sidebar.appendChild(customSection);
         }
 
         document.body.appendChild(miniBtn);
@@ -389,7 +621,13 @@
     ────────────────────────────────────────────── */
 
     function init() {
-        chrome.storage.local.get(['sidebarDefaultOpen', 'sidebarPos'], (data) => {
+        chrome.storage.local.get(['sidebarDefaultOpen', 'sidebarPos', 'customDomains', 'disabledDefaults'], (data) => {
+            // 비활성화된 기본 도메인 필터링 + 커스텀 도메인 병합
+            const customs = data.customDomains || [];
+            const disabled = data.disabledDefaults || [];
+            const activeDefaults = DEFAULT_COMMUNITY_DOMAINS.filter(c => !disabled.includes(c.domain));
+            allCommunityDomains = [...activeDefaults, ...customs];
+
             // 기본값: true (처음 사용 시 사이드바 열린 상태)
             const config = {
                 defaultOpen: data.sidebarDefaultOpen !== undefined ? data.sidebarDefaultOpen : true,
