@@ -47,7 +47,7 @@
     }
 
     /**
-     * 구글 검색 결과 DOM에서 커뮤니티 게시글을 추출합니다.
+     * 구글 검색 결과 DOM에서 사이트 게시글을 추출합니다.
      * 구조: <a href="..."><h3>제목</h3></a>
      */
     function extractCommunityResults() {
@@ -79,7 +79,7 @@
     }
 
     /**
-     * 검색 결과가 없는 커뮤니티 목록 반환
+     * 검색 결과가 없는 사이트 목록 반환
      */
     function getMissingCommunities(results) {
         const foundDomains = new Set(results.map((r) => r.domain));
@@ -181,7 +181,7 @@
         miniBtn.id = MINI_BTN_ID;
         miniBtn.className = 'cf-mini-btn';
         miniBtn.innerHTML = '💬';
-        miniBtn.title = '커뮤니티 반응 열기';
+        miniBtn.title = '사이트 반응 열기';
 
         // 최소화 버튼 위치도 사이드바 위치에 따라 조정 가능하지만, 
         // 일단 기본값으로 두고 필요시 연동
@@ -219,7 +219,7 @@
 
         const titleEl = document.createElement('h2');
         titleEl.className = 'cf-header-title';
-        titleEl.textContent = '커뮤니티 반응';
+        titleEl.textContent = '사이트 반응';
         headerLeft.appendChild(titleEl);
 
         if (results.length > 0) {
@@ -278,7 +278,7 @@
         if (results.length === 0) {
             const empty = document.createElement('div');
             empty.className = 'cf-empty';
-            empty.textContent = '커뮤니티 결과 없음';
+            empty.textContent = '사이트 결과 없음';
             body.appendChild(empty);
         } else {
             const ul = document.createElement('ul');

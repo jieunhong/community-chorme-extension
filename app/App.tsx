@@ -51,7 +51,7 @@ export default function App() {
     const searchResults = document.querySelectorAll('.search-result-item');
     const grouped: { [key: string]: CommunityResult[] } = {};
 
-    // 커뮤니티별로 초기화
+    // 사이트별로 초기화
     COMMUNITIES.forEach(community => {
       grouped[community.domain] = [];
     });
@@ -65,7 +65,7 @@ export default function App() {
         const url = linkElement.getAttribute('href') || '';
         const title = titleElement.textContent || '';
 
-        // 커뮤니티 도메인에 해당하는지 확인
+        // 사이트 도메인에 해당하는지 확인
         COMMUNITIES.forEach(community => {
           if (url.includes(community.domain)) {
             grouped[community.domain].push({
@@ -150,7 +150,7 @@ export default function App() {
                 </h3>
               </a>
               <p className="text-sm text-gray-700">
-                더쿠 커뮤니티에서 {searchQuery}에 대한 실제 사용자들의 후기와 의견을 확인할 수 있습니다...
+                더쿠 사이트에서 {searchQuery}에 대한 실제 사용자들의 후기와 의견을 확인할 수 있습니다...
               </p>
             </div>
 
@@ -243,7 +243,7 @@ export default function App() {
             <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-4 py-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Search className="w-5 h-5 text-white" />
-                <span className="text-white font-semibold">커뮤니티 검색</span>
+                <span className="text-white font-semibold">사이트 검색</span>
               </div>
               <button
                 onClick={() => setIsCollapsed(true)}
@@ -262,11 +262,11 @@ export default function App() {
             {/* 구분선 */}
             <div className="h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent mx-4 my-2" />
 
-            {/* 커뮤니티 리스트 (결과 있는 것) */}
+            {/* 사이트 리스트 (결과 있는 것) */}
             <div className="px-3 py-2 space-y-3 max-h-[600px] overflow-y-auto">
               {groupsWithResults.map((group: CommunityGroup, groupIdx: number) => (
                 <div key={group.name} className="space-y-2">
-                  {/* 커뮤니티 헤더 */}
+                  {/* 사이트 헤더 */}
                   <div className="flex items-center gap-2 px-2">
                     <span className="text-lg">{group.icon}</span>
                     <span className="text-sm font-bold text-gray-800">
@@ -300,7 +300,7 @@ export default function App() {
               ))}
             </div>
 
-            {/* 사이트 내 검색 — 하단 고정, 모든 커뮤니티 항상 표시 */}
+            {/* 사이트 내 검색 — 하단 고정, 모든 사이트 항상 표시 */}
             <div className="px-3 py-3 bg-gray-50 border-t border-gray-200">
               <p className="text-xs text-gray-500 font-semibold mb-2">🔎 사이트 내 검색</p>
               <div className="flex flex-wrap gap-1.5">

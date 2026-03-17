@@ -1,9 +1,9 @@
-# 커뮤니티 검색 필터 익스텐션 개발 가이드
+# 사이트 검색 필터 익스텐션 개발 가이드
 
 ## 📋 프로젝트 개요
 
 ### 목적
-구글 검색 결과 페이지에서 특정 커뮤니티 도메인의 검색 결과만 추출하여 플로팅 사이드바에 표시하는 크롬 익스텐션
+구글 검색 결과 페이지에서 특정 사이트 도메인의 검색 결과만 추출하여 플로팅 사이드바에 표시하는 크롬 익스텐션
 
 ### 핵심 컨셉
 - **추가 검색 없음**: 현재 페이지 DOM만 파싱
@@ -24,14 +24,14 @@
     ↓
 DOM에서 검색 결과 파싱
     ↓
-커뮤니티 도메인 필터링
+사이트 도메인 필터링
     ↓
 플로팅 사이드바 생성 및 표시
     ↓
 사용자가 원하는 링크 클릭
 ```
 
-### 2. 대상 커뮤니티 도메인
+### 2. 대상 사이트 도메인
 ```javascript
 const COMMUNITY_DOMAINS = [
   "dcinside.com",
@@ -53,7 +53,7 @@ const COMMUNITY_DOMAINS = [
 {
   title: string,  // h3의 텍스트
   href: string,   // a 태그의 href
-  domain: string  // 필터링된 커뮤니티 도메인
+  domain: string  // 필터링된 사이트 도메인
 }
 ```
 
@@ -80,7 +80,7 @@ community-filter-extension/
 {
   "manifest_version": 3,
   "name": "Community Filter Search",
-  "description": "구글 검색 결과에서 커뮤니티 반응만 추출",
+  "description": "구글 검색 결과에서 사이트 반응만 추출",
   "version": "1.0.0",
   "permissions": [],
   "content_scripts": [
@@ -109,7 +109,7 @@ community-filter-extension/
 
 ## 💻 content.js 구현 가이드
 
-### 1. 커뮤니티 정의
+### 1. 사이트 정의
 ```javascript
 const COMMUNITIES = [
   { name: '디시인사이드', domain: 'dcinside.com', icon: '🎮' },
@@ -128,7 +128,7 @@ function parseSearchResults() {
   
   const grouped = {};
   
-  // 커뮤니티별 초기화
+  // 사이트별 초기화
   COMMUNITIES.forEach(community => {
     grouped[community.domain] = [];
   });
@@ -140,7 +140,7 @@ function parseSearchResults() {
     
     if (!href || !title) return;
     
-    // 커뮤니티 도메인 포함 여부 확인
+    // 사이트 도메인 포함 여부 확인
     COMMUNITIES.forEach(community => {
       if (href.includes(community.domain)) {
         grouped[community.domain].push({
@@ -170,7 +170,7 @@ function createSidebar(groupedResults) {
   // 헤더
   sidebar.innerHTML = `
     <div class="sidebar-header">
-      <span class="sidebar-title">🔍 커뮤니티 검색</span>
+      <span class="sidebar-title">🔍 사이트 검색</span>
       <button class="sidebar-close" id="sidebar-toggle">✕</button>
     </div>
     <div class="sidebar-content" id="sidebar-content"></div>
@@ -178,7 +178,7 @@ function createSidebar(groupedResults) {
   
   const content = sidebar.querySelector('#sidebar-content');
   
-  // 커뮤니티별 결과 렌더링
+  // 사이트별 결과 렌더링
   COMMUNITIES.forEach(community => {
     const results = groupedResults[community.domain];
     
@@ -211,7 +211,7 @@ function createSidebar(groupedResults) {
   
   // 결과 없을 때
   if (content.children.length === 0) {
-    content.innerHTML = '<div class="no-results">커뮤니티 검색 결과가 없습니다</div>';
+    content.innerHTML = '<div class="no-results">사이트 검색 결과가 없습니다</div>';
   }
   
   document.body.appendChild(sidebar);
@@ -407,12 +407,12 @@ if (document.readyState === 'loading') {
 ### Phase 1: 기본 구조 (30분)
 1. manifest.json 작성
 2. content.js 파일 생성
-3. 커뮤니티 상수 정의
+3. 사이트 상수 정의
 
 ### Phase 2: DOM 파싱 (30분)
 1. parseSearchResults() 함수 구현
 2. 구글 검색 결과 구조 분석
-3. 커뮤니티 도메인 필터링 로직
+3. 사이트 도메인 필터링 로직
 
 ### Phase 3: UI 구현 (1시간)
 1. createSidebar() 함수 구현
@@ -432,13 +432,13 @@ if (document.readyState === 'loading') {
 ```
 1. 구글에서 "entp 특징" 검색
 2. 사이드바가 오른쪽에 나타나는지 확인
-3. 커뮤니티별로 그룹핑되어 있는지 확인
+3. 사이트별로 그룹핑되어 있는지 확인
 4. 링크 클릭 시 새 탭에서 열리는지 확인
 ```
 
 ### 2. 엣지 케이스
 ```
-- 커뮤니티 결과가 0개일 때
+- 사이트 결과가 0개일 때
 - 검색 결과가 매우 많을 때
 - 페이지 스크롤 시 사이드바 고정 여부
 - 접기/펼치기 동작
@@ -456,12 +456,12 @@ if (document.readyState === 'loading') {
 
 ## 🔧 개선 아이디어 (MVP 이후)
 
-### 1. 커뮤니티별 그룹핑 개선
-- 결과 없는 커뮤니티는 "검색하기" 링크 제공
+### 1. 사이트별 그룹핑 개선
+- 결과 없는 사이트는 "검색하기" 링크 제공
 - 예: `디시 결과 없음 → [디시에서 검색하기]`
 
 ### 2. 설정 기능
-- 사용자가 커뮤니티 추가/제거
+- 사용자가 사이트 추가/제거
 - 사이드바 위치 조정
 - 자동 실행 on/off
 
@@ -513,9 +513,9 @@ if (document.readyState === 'loading') {
 ## 🎯 MVP 완성 기준
 
 ✅ 구글 검색 페이지에서 자동 실행  
-✅ 5개 커뮤니티 도메인 필터링  
+✅ 5개 사이트 도메인 필터링  
 ✅ 플로팅 사이드바 UI 표시  
-✅ 커뮤니티별 그룹핑  
+✅ 사이트별 그룹핑  
 ✅ 링크 클릭 시 새 탭 열기  
 ✅ 접기/펼치기 기능  
 
@@ -525,13 +525,13 @@ if (document.readyState === 'loading') {
 
 개발 중 아래 사항들을 결정해야 합니다:
 
-1. **결과 개수 제한**: 커뮤니티당 최대 몇 개? (권장: 3-5개)
+1. **결과 개수 제한**: 사이트당 최대 몇 개? (권장: 3-5개)
 2. **초기 상태**: 사이드바가 펼쳐진 상태? 접힌 상태?
 3. **위치**: 고정 위치? 드래그 가능?
 4. **아이콘**: 텍스트 이모지? 이미지 파일?
 
 현재 기획서 기준 권장값:
-- 결과 개수: 커뮤니티당 최대 5개
+- 결과 개수: 사이트당 최대 5개
 - 초기 상태: 펼쳐진 상태
 - 위치: 오른쪽 상단 고정 (top: 100px, right: 20px)
 - 아이콘: 이모지 사용
